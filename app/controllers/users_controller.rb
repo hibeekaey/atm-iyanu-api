@@ -1,7 +1,29 @@
 class UsersController < ApplicationController
 
   def create
+    params = create_user_params
 
+    if [params[:first_name], params[:middle_name], params[:surname],
+        params[:email], params[:phone_number]].none?(&:nil?)
+
+      res = User.attempt_registration(params[:first_name],
+                                      params[:surname],
+                                      params[:middle_name],
+                                      params[:email],
+                                      params[:phone_number])
+
+      if res[:exec_status]
+        render json: { status: true, data: res[:data] }, status: :created
+      else
+        render json: { status: false, data: {
+            message: 'Unable to create user at the moment.'
+        }}
+      end
+    else
+      render json: { status: false, data: {
+          message: 'Invalid parameters'
+      }}, status: :bad_request
+    end
   end
 
   private
