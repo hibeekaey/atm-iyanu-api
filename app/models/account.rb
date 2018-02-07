@@ -30,7 +30,7 @@ class Account < ApplicationRecord
     account = Account.find_by_number(account_number)
 
     if !account.nil?
-      account.balance += amount
+      account.balance += Integer(amount)
 
       if account.save
         return { exec_status: 'credit_success', data: account }
