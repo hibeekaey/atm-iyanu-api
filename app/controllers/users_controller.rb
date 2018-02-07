@@ -1,5 +1,20 @@
 class UsersController < ApplicationController
 
+  def show
+    params = show_user_params
+
+    if params[:id]
+      user = User.find(Integer(params[:id]))
+
+      render json: { status: true, data: {
+          user: user,
+          accounts: user.accounts
+      }}
+    else
+      render_invalid_parameters
+    end
+  end
+
   def create
     params = create_user_params
 
@@ -30,5 +45,9 @@ class UsersController < ApplicationController
   def create_user_params
     params.permit :first_name, :middle_name, :surname,
                   :status, :phone_number, :email
+  end
+
+  def show_user_params
+    params.permit :id
   end
 end

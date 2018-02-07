@@ -25,7 +25,7 @@ class AccountsController < ApplicationController
     params = show_account_params
 
     if params[:id]
-      render json: { status: true, data: Account.find(id) }
+      render json: { status: true, data: Account.find(Integer(params[:id])) }
     else
       render_invalid_parameters
     end
