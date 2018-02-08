@@ -1,5 +1,9 @@
 class AccountsController < ApplicationController
 
+  def index
+    render json: { status: true, data: Account.all }
+  end
+
   def create
     params = create_account_params
 

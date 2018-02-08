@@ -1,0 +1,11 @@
+# Read about fixtures at http://api.rubyonrails.org/classes/ActiveRecord/FixtureSet.html
+
+one:
+  fops: MyString
+  nfig: 1
+  base64_template: MyString
+
+two:
+  fops: MyString
+  nfig: 1
+  base64_template: MyString

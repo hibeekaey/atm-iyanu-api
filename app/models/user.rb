@@ -1,5 +1,6 @@
 class User < ApplicationRecord
   has_many :accounts
+  has_many :fingerprints
   before_validation :set_status
 
   validates_presence_of :first_name, :surname, :middle_name, :email, :phone_number
@@ -9,18 +10,39 @@ class User < ApplicationRecord
 
   enum status: { active: 'active', suspended: 'suspended' }
 
-  def self.attempt_registration(first_name, surname, middle_name, email, phone_number)
-    user = User.new
-    user.first_name= first_name
-    user.middle_name= middle_name
-    user.surname= surname
-    user.email= email
-    user.phone_number= phone_number
+  def self.attempt_registration(signatory_details, fingerprint_data)
+    ActiveRecord::Base.transaction do
+      user = User.new
+      user.first_name= signatory_details[:first_name]
+      user.middle_name= signatory_details[:middle_name]
+      user.surname= signatory_details[:surname]
+      user.email= signatory_details[:email]
+      user.phone_number= signatory_details[:phone_number]
 
-    if user.save
-      { exec_status: true, data: user }
-    else
-      { exec_status: false, data: user }
+      if user.save!
+        fingerprint = Fingerprint.new
+        fingerprint.fpos= fingerprint_data[:fpos]
+        fingerprint.nfig= fingerprint_data[:nfig]
+        fingerprint.base64_template= fingerprint_data[:base64_template]
+        fingerprint.user= user
+
+        if fingerprint.save!
+          res = Account.attempt_creation(user.id,
+                                         "#{user.first_name} #{user.surname}",
+                                         nil,
+                                         500000)
+
+          { exec_status: true, data: {
+              user: user,
+              account: res[:data],
+              fingerprint: fingerprint
+          }}
+        else
+          { exec_status: false, data: nil }
+        end
+      else
+        { exec_status: false, data: nil }
+      end
     end
   end
 

@@ -1,5 +1,9 @@
 class UsersController < ApplicationController
 
+  def index
+    render json: { status: true, data: User.all }
+  end
+
   def show
     params = show_user_params
 
@@ -8,7 +12,8 @@ class UsersController < ApplicationController
 
       render json: { status: true, data: {
           user: user,
-          accounts: user.accounts
+          accounts: user.accounts,
+          fingerprints: user.fingerprints
       }}
     else
       render_invalid_parameters
@@ -18,14 +23,14 @@ class UsersController < ApplicationController
   def create
     params = create_user_params
 
-    if [params[:first_name], params[:middle_name], params[:surname],
-        params[:email], params[:phone_number]].none?(&:nil?)
+    signatory_details = params[:signatory_details]
+    fingerprint = params[:fingerprint]
 
-      res = User.attempt_registration(params[:first_name],
-                                      params[:surname],
-                                      params[:middle_name],
-                                      params[:email],
-                                      params[:phone_number])
+    if [signatory_details[:first_name], signatory_details[:middle_name], signatory_details[:surname],
+        signatory_details[:email], signatory_details[:phone_number], fingerprint[:fpos], fingerprint[:nfig],
+        fingerprint[:base64_template]].none?(&:nil?)
+
+      res = User.attempt_registration(signatory_details, fingerprint)
 
       if res[:exec_status]
         render json: { status: true, data: res[:data] }, status: :created
@@ -41,10 +46,19 @@ class UsersController < ApplicationController
     end
   end
 
+  def list_fingerprints
+    render json: { status: true, data: Fingerprint.all }
+  end
+
   private
   def create_user_params
-    params.permit :first_name, :middle_name, :surname,
-                  :status, :phone_number, :email
+    params.require(:signatory_details)
+        .permit(:first_name, :middle_name, :surname, :status, :phone_number, :email)
+
+    params.require(:fingerprint)
+        .permit(:fpos, :nfig, :base64_template)
+
+    params
   end
 
   def show_user_params
